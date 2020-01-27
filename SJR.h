@@ -80,7 +80,6 @@ class SJR
         bool parse(char*& file);
 };
 
-#define SJR_IMPLEMENTATION
 #ifdef SJR_IMPLEMENTATION
 
 
