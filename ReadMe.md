@@ -1,7 +1,7 @@
 # SJR
 Library for reading JSON files.
 
-##Include
+## Include
 
 In only one file print.
 
@@ -16,9 +16,9 @@ And then in other files include it
 #include "SJR.h"
 ```
 
-##Use
+## Use
 
-###Load
+### Load
 ```cpp
 #define SJR_IMPLEMENTATION
 #include "SJR.h"
@@ -28,7 +28,7 @@ SJR json;
 json.load("Filename.fileExtension");
 
 ```
-###Read
+### Read
 
 If you have json file like the following :
 ```cpp
@@ -61,7 +61,7 @@ json["Ability"]["SpecialAttack"].getValue<int>();	// 40
 ```
 
 
-###Save
+### Save
 
 ```cpp
 json.save("FilenameWhereYouWantToSave.fileExtension");
