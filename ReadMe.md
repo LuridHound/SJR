@@ -50,9 +50,9 @@ If you have json file like the following :
 you can get the values this way
 ```cpp
 json["Weapon"].getValue<std::string>();				//"fangs"
-json["LifePoints"].getValue<int>();					// 1000
-json["Speed"].getValue<float>();					// 3.14
-json["Enemy"].getValue<bool>();						// 0 (false)
+json["LifePoints"].getValue<int>();				// 1000
+json["Speed"].getValue<float>();				// 3.14
+json["Enemy"].getValue<bool>();					// 0 (false)
 json["GoldPerItem"][0].getValue<int>();				// 1
 json["GoldPerItem"][1].getValue<int>();				// 2
 json["GoldPerItem"][2].getValue<int>();				// 3
