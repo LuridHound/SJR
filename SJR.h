@@ -432,12 +432,15 @@ bool SJR::parseNumber(char*& file)
             type = Type::FLOAT;
             valueFloat = static_cast<float>(valueInt);
 
+	    int shift = 1;
+		
             while(isdigit(*file))
             {
-                valueFloat *= 10;
+                valueFloat *= pow(10, shift);
                 valueFloat += static_cast<float>(*file - '0');
-                valueFloat /= 10;
+                valueFloat /= pow(10, shift);
 
+		++shift;
                 ++file;
             }
 
