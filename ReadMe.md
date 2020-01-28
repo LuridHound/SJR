@@ -57,7 +57,7 @@ json["GoldPerItem"][0].getValue<int>();				// 1
 json["GoldPerItem"][1].getValue<int>();				// 2
 json["GoldPerItem"][2].getValue<int>();				// 3
 json["Ability"]["Attack"].getValue<int>();			// 20
-json["Ability"]["SpecialAttack"].getValue<int>();	// 40
+json["Ability"]["SpecialAttack"].getValue<int>();		// 40
 ```
 
 
