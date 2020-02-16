@@ -83,15 +83,13 @@ class SJR
         bool parse(char*& file);
 };
 
-#ifdef SJR_IMPLEMENTATION
-
 
 //      ====================      ====================
 //      ====================PUBLIC====================
 //      ====================      ====================
 
 
-void SJR::load(std::string_view filename)
+inline void SJR::load(std::string_view filename)
 {
     std::ifstream file(filename.data());
     std::string str;
@@ -118,7 +116,7 @@ void SJR::load(std::string_view filename)
 
 
 [[nodiscard]]
-bool SJR::save(std::string_view filename)
+inline bool SJR::save(std::string_view filename)
 {
     std::ofstream file(filename.data());
 
@@ -165,7 +163,7 @@ void SJR::setValue(T newValue)
 
 
 [[nodiscard]]
-SJR::Type SJR::getType() const
+inline SJR::Type SJR::getType() const
 {
     return type;
 }
@@ -193,21 +191,21 @@ T SJR::getValue() const
 
 
 [[nodiscard]]
-size_t SJR::getChildCount() const
+inline size_t SJR::getChildCount() const
 {
     return mapJson.size();
 }
 
 
 [[nodiscard]]
-size_t SJR::getArraySize() const
+inline size_t SJR::getArraySize() const
 {
     return vectorJson.size();
 }
 
 
 [[nodiscard]]
-SJR& SJR::operator[] (std::string_view nodeName)
+inline SJR& SJR::operator[] (std::string_view nodeName)
 {
     auto it = mapJson.find(nodeName.data());
 
@@ -225,7 +223,7 @@ SJR& SJR::operator[] (std::string_view nodeName)
 //  Indexing starts with 0.
 //
 [[nodiscard]]
-SJR& SJR::operator[] (size_t index)
+inline SJR& SJR::operator[] (size_t index)
 {
     if (type != Type::ARRAY)
     {
@@ -247,7 +245,7 @@ SJR& SJR::operator[] (size_t index)
 //      ====================       ====================
 
 
-void SJR::writeTabs(std::ofstream& file, size_t count)
+inline void SJR::writeTabs(std::ofstream& file, size_t count)
 {
     for (size_t i = 0u; i < count; ++i)
     {
@@ -256,7 +254,7 @@ void SJR::writeTabs(std::ofstream& file, size_t count)
 }
 
 
-void SJR::skipWhiteSpace(char*&file)
+inline void SJR::skipWhiteSpace(char*&file)
 {
     while (isspace(*file))
     {
@@ -265,7 +263,7 @@ void SJR::skipWhiteSpace(char*&file)
 }
 
 
-void SJR::writeBool(std::ofstream& file)
+inline void SJR::writeBool(std::ofstream& file)
 {
     file.setf(std::ios_base::boolalpha);
     file << static_cast<bool>(std::stoi(value));
@@ -273,25 +271,25 @@ void SJR::writeBool(std::ofstream& file)
 }
 
 
-void SJR::writeInt(std::ofstream &file)
+inline void SJR::writeInt(std::ofstream &file)
 {
     file << std::stoi(value);
 }
 
 
-void SJR::writeFloat(std::ofstream &file)
+inline void SJR::writeFloat(std::ofstream &file)
 {
     file << std::stof(value);
 }
 
 
-void SJR::writeString(std::ofstream &file)
+inline void SJR::writeString(std::ofstream &file)
 {
     file << "\"" << value << "\"";
 }
 
 
-void SJR::writeArray(std::ofstream &file)
+inline void SJR::writeArray(std::ofstream &file)
 {
     file << '[';
 
@@ -309,7 +307,7 @@ void SJR::writeArray(std::ofstream &file)
 }
 
 
-void SJR::writeObject(std::ofstream &file)
+inline void SJR::writeObject(std::ofstream &file)
 {
     if (!value.empty())
     {
@@ -352,7 +350,7 @@ void SJR::writeObject(std::ofstream &file)
 }
 
 
-void SJR::write(std::ofstream& file)
+inline void SJR::write(std::ofstream& file)
 {
     switch (type)
     {
@@ -386,7 +384,7 @@ void SJR::write(std::ofstream& file)
 
 
 [[nodiscard]]
-bool SJR::parseBool(char*& file)
+inline bool SJR::parseBool(char*& file)
 {
     bool resultTrue = memcmp(file, "true", 4) == 0;
     bool resultFalse = memcmp(file, "false", 5) == 0;
@@ -404,7 +402,7 @@ bool SJR::parseBool(char*& file)
 
 
 [[nodiscard]]
-bool SJR::parseNumber(char*& file)
+inline bool SJR::parseNumber(char*& file)
 {
     bool signNegative = *file == '-';
     bool signPositive = *file == '+';
@@ -482,7 +480,7 @@ bool SJR::parseNumber(char*& file)
 
 
 [[nodiscard]]
-bool SJR::parseString(char*& file)
+inline bool SJR::parseString(char*& file)
 {
     if (*file == '"')
     {
@@ -514,7 +512,7 @@ bool SJR::parseString(char*& file)
 
 
 [[nodiscard]]
-bool SJR::parseArray(char*& file)
+inline bool SJR::parseArray(char*& file)
 {
     if (*file == '[')
     {
@@ -568,7 +566,7 @@ bool SJR::parseArray(char*& file)
 
 
 [[nodiscard]]
-bool SJR::parseObject(char*& file)
+inline bool SJR::parseObject(char*& file)
 {
     if (*file == '{')
     {
@@ -657,7 +655,7 @@ bool SJR::parseObject(char*& file)
 //
 //
 [[nodiscard]]
-bool SJR::parse(char*& file)
+inline bool SJR::parse(char*& file)
 {
     skipWhiteSpace(file);
 
@@ -689,7 +687,5 @@ bool SJR::parse(char*& file)
     return false;
 }
 
-
-#endif
 
 #endif // SJR_H
