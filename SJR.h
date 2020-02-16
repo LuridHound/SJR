@@ -1,3 +1,6 @@
+#ifndef SJR_H
+#define SJR_H
+
 #include <vector>
 #include <map>
 
@@ -688,3 +691,5 @@ bool SJR::parse(char*& file)
 
 
 #endif
+
+#endif // SJR_H
