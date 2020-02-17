@@ -3,19 +3,11 @@ Library for reading JSON files.
 
 ## Include
 
-In only one file print.
-
-```cpp
-#define SJR_IMPLEMENTATION
-#include "SJR.h"
-```
-
-And then in other files include it
+Include it as usual file.
 
 ```cpp
 #include "SJR.h"
 ```
-
 ## Use
 
 ### Load
