@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cmath>
 #include <type_traits>
+#include <variant>
 
 
 class SJR
@@ -16,6 +17,7 @@ class SJR
 
     public:
 
+        // The same ordering, as in the std::variant<...> value.
         enum class Type : int
         {
             BOOL = 0,
@@ -53,7 +55,7 @@ class SJR
         std::map<std::string, SJR> mapJson;
         std::vector<SJR> vectorJson;
 
-        std::string value;
+        std::variant<bool, int, float, std::string> value;
         Type type = Type::OBJECT;
 
         static void writeTabs(std::ofstream& file, size_t count);
@@ -171,19 +173,24 @@ template<class T>
 [[nodiscard]]
 T SJR::getValue() const
 {
-    if constexpr(std::is_same_v<T, bool> || std::is_same_v<T, int>)
+    if constexpr(std::is_same_v<T, bool>)
     {
-        return std::stoi(value);
+        return std::get<static_cast<int>(Type::BOOL)>(value);
+    }
+
+    if constexpr(std::is_same_v<T, int>)
+    {
+        return std::get<static_cast<int>(Type::INT)>(value);
     }
 
     if constexpr(std::is_same_v<T, float>)
     {
-        return std::stof(value);
+        return std::get<static_cast<int>(Type::FLOAT)>(value);
     }
 
     if constexpr(std::is_same_v<T, std::string>)
     {
-        return value;
+        return std::get<static_cast<int>(Type::STRING)>(value);
     }
 }
 
@@ -264,26 +271,26 @@ inline void SJR::skipWhiteSpace(char*&file)
 inline void SJR::writeBool(std::ofstream& file)
 {
     file.setf(std::ios_base::boolalpha);
-    file << static_cast<bool>(std::stoi(value));
+    file << static_cast<bool>(std::get<static_cast<int>(Type::BOOL)>(value));
     file.unsetf(std::ios::boolalpha);
 }
 
 
 inline void SJR::writeInt(std::ofstream &file)
 {
-    file << std::stoi(value);
+    file << std::get<static_cast<int>(Type::INT)>(value);
 }
 
 
 inline void SJR::writeFloat(std::ofstream &file)
 {
-    file << std::stof(value);
+    file << std::get<static_cast<int>(Type::FLOAT)>(value);
 }
 
 
 inline void SJR::writeString(std::ofstream &file)
 {
-    file << "\"" << value << "\"";
+    file << "\"" << std::get<static_cast<int>(Type::STRING)>(value) << "\"";
 }
 
 
@@ -307,9 +314,9 @@ inline void SJR::writeArray(std::ofstream &file)
 
 inline void SJR::writeObject(std::ofstream &file)
 {
-    if (!value.empty())
+    if (type != Type::ARRAY && type != Type::OBJECT)
     {
-        file << "\"" << value << "\"";
+        file << "\"" << std::get<static_cast<int>(Type::STRING)>(value) << "\"";
         file << ": ";
     }
 
@@ -389,7 +396,7 @@ inline bool SJR::parseBool(char*& file)
 
     if (resultTrue || resultFalse)
     {
-        value = std::to_string(resultTrue);
+        value = resultTrue;
         file += resultTrue ? 4 : 5;
         type = Type::BOOL;
         return true;
@@ -443,7 +450,7 @@ inline bool SJR::parseNumber(char*& file)
                 ++file;
             }
 
-            value = std::to_string(valueFloat * (signNegative ? -1. : 1.));
+            value = static_cast<float>(valueFloat * (signNegative ? -1. : 1.));
 
             return true;
         }
@@ -464,12 +471,12 @@ inline bool SJR::parseNumber(char*& file)
 
             valueFloat *= static_cast<float>(pow(10, valueInt));
 
-            value = std::to_string(valueFloat * (signNegative ? -1. : 1.));
+            value = static_cast<float>(valueFloat * (signNegative ? -1. : 1.));
             return true;
         }
 
         type = Type::INT;
-        value = std::to_string(valueInt * (signNegative ? -1 : 1));
+        value = valueInt * (signNegative ? -1 : 1);
         return true;
     }
 
@@ -486,21 +493,27 @@ inline bool SJR::parseString(char*& file)
 
         type = Type::STRING;
 
+        std::string currentWord;
+
         while (*file != '"')
         {
             SJR::skipWhiteSpace(file);
 
             if (*file == '"')
             {
+                value = currentWord;
                 return true;
             }
 
-            value += *file;
+
+            currentWord += *file;
 
             ++file;
         }
 
         ++file;
+
+        value = std::move(currentWord);
 
         return true;
     }
