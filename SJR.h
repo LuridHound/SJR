@@ -32,7 +32,7 @@ class SJR
         bool save(std::string_view filename);
 
         template<class T>
-        void setValue(T newValue);
+        void setValue(T&& newValue);
 
         [[nodiscard]]
         Type getType() const;
@@ -134,31 +134,29 @@ inline bool SJR::save(std::string_view filename)
 
 
 template<class T>
-void SJR::setValue(T newValue)
+void SJR::setValue(T&& newValue)
 {
     if constexpr(std::is_same_v<T, bool>)
     {
         type = Type::BOOL;
-        value = std::to_string(newValue);
     }
 
     if constexpr(std::is_same_v<T, int>)
     {
         type = Type::INT;
-        value = std::to_string(newValue);
     }
 
     if constexpr(std::is_same_v<T, float>)
     {
         type = Type::FLOAT;
-        value = std::to_string(newValue);
     }
 
     if constexpr (std::is_same_v<T, std::string>)
     {
         type = Type::STRING;
-        value = newValue;
     }
+
+    value = std::forward<T>(newValue);
 }
 
 
@@ -433,15 +431,15 @@ inline bool SJR::parseNumber(char*& file)
             type = Type::FLOAT;
             valueFloat = static_cast<float>(valueInt);
 
-	    int shift = 1;
-		
+            int shift = 1;
+
             while(isdigit(*file))
             {
                 valueFloat *= pow(10, shift);
                 valueFloat += static_cast<float>(*file - '0');
                 valueFloat /= pow(10, shift);
 
-		++shift;
+                ++shift;
                 ++file;
             }
 
