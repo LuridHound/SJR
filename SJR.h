@@ -17,6 +17,14 @@ class SJR
 
     public:
 
+
+        SJR(const SJR&) = delete;
+        SJR& operator = (const SJR&) = delete;
+
+        SJR(const SJR&&) = delete;
+        SJR& operator = (const SJR&&) = delete;
+
+
         // The same ordering, as in the std::variant<...> value.
         enum class Type : int
         {
