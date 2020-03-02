@@ -15,7 +15,7 @@
 class SJR
 {
 
-    public:
+    public :
 
 
         SJR(const SJR&) = delete;
@@ -24,6 +24,7 @@ class SJR
         SJR(const SJR&&) = delete;
         SJR& operator = (const SJR&&) = delete;
 
+        SJR() = default;
 
         // The same ordering, as in the std::variant<...> value.
         enum class Type : int
@@ -58,7 +59,14 @@ class SJR
         SJR& operator[] (std::string_view nodeName);
         SJR& operator[] (size_t index);
 
-    private:
+    private :
+
+		template<class T>
+        static constexpr auto to_integral(T enumValue) -> std::underlying_type_t<T>
+        {
+            return static_cast<std::underlying_type_t<T>>(enumValue);
+        }
+
 
         std::map<std::string, SJR> mapJson;
         std::vector<SJR> vectorJson;
@@ -183,22 +191,22 @@ T SJR::getValue() const
 {
     if constexpr(std::is_same_v<T, bool>)
     {
-        return std::get<static_cast<int>(Type::BOOL)>(value);
+        return std::get<to_integral(Type::BOOL)>(value);
     }
 
     if constexpr(std::is_same_v<T, int>)
     {
-        return std::get<static_cast<int>(Type::INT)>(value);
+        return std::get<to_integral(Type::INT)>(value);
     }
 
     if constexpr(std::is_same_v<T, float>)
     {
-        return std::get<static_cast<int>(Type::FLOAT)>(value);
+        return std::get<to_integral(Type::FLOAT)>(value);
     }
 
     if constexpr(std::is_same_v<T, std::string>)
     {
-        return std::get<static_cast<int>(Type::STRING)>(value);
+        return std::get<to_integral(Type::STRING)>(value);
     }
 }
 
@@ -279,26 +287,26 @@ inline void SJR::skipWhiteSpace(char*&file)
 inline void SJR::writeBool(std::ofstream& file)
 {
     file.setf(std::ios_base::boolalpha);
-    file << static_cast<bool>(std::get<static_cast<int>(Type::BOOL)>(value));
+    file << static_cast<bool>(std::get<to_integral(Type::BOOL)>(value));
     file.unsetf(std::ios::boolalpha);
 }
 
 
 inline void SJR::writeInt(std::ofstream &file)
 {
-    file << std::get<static_cast<int>(Type::INT)>(value);
+    file << std::get<to_integral(Type::INT)>(value);
 }
 
 
 inline void SJR::writeFloat(std::ofstream &file)
 {
-    file << std::get<static_cast<int>(Type::FLOAT)>(value);
+    file << std::get<to_integral(Type::FLOAT)>(value);
 }
 
 
 inline void SJR::writeString(std::ofstream &file)
 {
-    file << "\"" << std::get<static_cast<int>(Type::STRING)>(value) << "\"";
+    file << "\"" << std::get<to_integral(Type::STRING)>(value) << "\"";
 }
 
 
@@ -324,7 +332,7 @@ inline void SJR::writeObject(std::ofstream &file)
 {
     if (type != Type::ARRAY && type != Type::OBJECT)
     {
-        file << "\"" << std::get<static_cast<int>(Type::STRING)>(value) << "\"";
+        file << "\"" << std::get<to_integral(Type::STRING)>(value) << "\"";
         file << ": ";
     }
 
