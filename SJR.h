@@ -14,16 +14,8 @@
 
 class SJR
 {
-
     public :
-
-
-        SJR(const SJR&) = delete;
-        SJR& operator = (const SJR&) = delete;
-
-        SJR(const SJR&&) = delete;
-        SJR& operator = (const SJR&&) = delete;
-
+    
         SJR() = default;
 
         // The same ordering, as in the std::variant<...> value.
@@ -60,14 +52,19 @@ class SJR
         SJR& operator[] (size_t index);
 
     private :
-
-		template<class T>
+    
+        SJR(const SJR&) = default;
+        SJR& operator = (const SJR&) = default;
+    
+        SJR(SJR&&) = default;
+        SJR& operator = (SJR&&) = default;
+        
+        template<class T>
         static constexpr auto to_integral(T enumValue) -> std::underlying_type_t<T>
         {
             return static_cast<std::underlying_type_t<T>>(enumValue);
         }
-
-
+        
         std::map<std::string, SJR> mapJson;
         std::vector<SJR> vectorJson;
 
@@ -716,3 +713,4 @@ inline bool SJR::parse(char*& file)
 
 
 #endif // SJR_H
+
