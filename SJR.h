@@ -15,7 +15,7 @@
 class SJR
 {
     public :
-    
+
         SJR() = default;
 
         // The same ordering, as in the std::variant<...> value.
@@ -52,19 +52,13 @@ class SJR
         SJR& operator[] (size_t index);
 
     private :
-    
-        SJR(const SJR&) = default;
-        SJR& operator = (const SJR&) = default;
-    
-        SJR(SJR&&) = default;
-        SJR& operator = (SJR&&) = default;
-        
+
         template<class T>
         static constexpr auto to_integral(T enumValue) -> std::underlying_type_t<T>
         {
             return static_cast<std::underlying_type_t<T>>(enumValue);
         }
-        
+
         std::map<std::string, SJR> mapJson;
         std::vector<SJR> vectorJson;
 
