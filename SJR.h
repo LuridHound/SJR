@@ -770,14 +770,14 @@ inline bool SJR::parse(char*& file)
 //      ====================       ====================
 
 
-SJR::FormatGuard::FormatGuard(std::ofstream& file, std::ios_base::fmtflags flag) :
+inline SJR::FormatGuard::FormatGuard(std::ofstream& file, std::ios_base::fmtflags flag) :
     file(file), flag(flag)
 {
     file.setf(flag);
 }
 
 
-SJR::FormatGuard::~FormatGuard()
+inline SJR::FormatGuard::~FormatGuard()
 {
     file.unsetf(flag);
 }
