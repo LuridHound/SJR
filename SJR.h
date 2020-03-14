@@ -10,14 +10,15 @@
 #include <cmath>
 #include <type_traits>
 #include <variant>
+#include <algorithm>
 
 
 class SJR
 {
     public :
-    
+
         SJR() = default;
-    
+
         // The same ordering, as in the std::variant<...> value.
         enum class Type
         {
@@ -28,70 +29,87 @@ class SJR
             ARRAY = 4,
             OBJECT = 5,
         };
-    
-        void load(std::string_view filename);
-    
+
+        bool load(std::string_view filename);
+
         [[nodiscard]]
         bool save(std::string_view filename);
-    
+
         template<class T>
         void setValue(T&& newValue);
-    
+
         [[nodiscard]]
         Type getType() const;
+
         template<class T>
         [[nodiscard]]
         T getValue() const;
-    
+
         [[nodiscard]]
         size_t getChildCount() const;
         [[nodiscard]]
         size_t getArraySize() const;
-    
+
         SJR& operator[] (std::string_view nodeName);
         SJR& operator[] (size_t index);
-    
+
     private :
-    
+
+        struct FormatGuard
+        {
+            FormatGuard(std::ofstream& file, std::ios_base::fmtflags flag);
+
+            ~FormatGuard();
+
+            private :
+
+                std::ofstream& file;
+                std::ios_base::fmtflags flag;
+        };
+
         template<class T>
         static constexpr auto to_integral(T enumValue) -> std::underlying_type_t<T>
         {
             return static_cast<std::underlying_type_t<T>>(enumValue);
         }
-    
-    
+
+        template<class Iterator>
+        Iterator remove_multi_whitespaces(Iterator begin, Iterator end);
+
         enum class Indexing
         {
+            //  Value
             BOOL = 0,
             INT = 1,
             FLOAT = 2,
             STRING = 3,
-    
+
+            //  Container
             MAP = 0,
             VECTOR = 1
         };
-    
+
         using mapJson    = std::map<std::string, SJR>;
         using vectorJson = std::vector<SJR>;
-    
-    
+
+
         std::variant<mapJson, vectorJson> container = mapJson();
         std::variant<bool, int, float, std::string> value = false;
-    
+
         Type type = Type::OBJECT;
-    
+
         static void writeTabs(std::ofstream& file, size_t count);
         static void skipWhiteSpace(char*&file);
-    
+
         void writeBool(std::ofstream& file);
         void writeInt(std::ofstream &file);
         void writeFloat(std::ofstream &file);
         void writeString(std::ofstream &file);
         void writeArray(std::ofstream &file);
         void writeObject(std::ofstream &file);
-    
+
         void write(std::ofstream& file);
-    
+
         [[nodiscard]]
         bool parseBool(char*& file);
         [[nodiscard]]
@@ -102,7 +120,7 @@ class SJR
         bool parseArray(char*& file);
         [[nodiscard]]
         bool parseObject(char*& file);
-    
+
         [[nodiscard]]
         bool parse(char*& file);
 };
@@ -113,14 +131,14 @@ class SJR
 //      ====================      ====================
 
 
-inline void SJR::load(std::string_view filename)
+inline bool SJR::load(std::string_view filename)
 {
     std::ifstream file(filename.data());
     std::string str;
 
     if (!file.is_open())
     {
-        throw std::runtime_error("File cannot be opened.");
+        return false;
     }
 
     file.seekg(0, std::ios::end);
@@ -130,14 +148,17 @@ inline void SJR::load(std::string_view filename)
     str.assign((std::istreambuf_iterator<char>(file)),{});
 
     file.close();
-    
+
     char* fileData = str.data();
 
-    if (!parse(fileData))
+    try
     {
-        throw std::runtime_error("File doesn't correspong to json format file.");
+        (void)parse(fileData);
     }
-
+    catch(...)
+    {
+        return false;
+    }
 }
 
 
@@ -275,6 +296,16 @@ inline SJR& SJR::operator[] (size_t index)
 //      ====================       ====================
 
 
+template<class Iterator>
+Iterator SJR::remove_multi_whitespaces(Iterator begin, Iterator end)
+{
+    return std::unique(begin, end, [](const auto& a, const auto& b)
+    {
+        return isspace(a) && isspace(b);
+    });
+}
+
+
 inline void SJR::writeTabs(std::ofstream& file, size_t count)
 {
     for (size_t i = 0u; i < count; ++i)
@@ -295,9 +326,8 @@ inline void SJR::skipWhiteSpace(char*&file)
 
 inline void SJR::writeBool(std::ofstream& file)
 {
-    file.setf(std::ios_base::boolalpha);
+    FormatGuard formatGuard(file, std::ios_base::boolalpha);
     file << static_cast<bool>(std::get<to_integral(Type::BOOL)>(value));
-    file.unsetf(std::ios::boolalpha);
 }
 
 
@@ -309,6 +339,7 @@ inline void SJR::writeInt(std::ofstream &file)
 
 inline void SJR::writeFloat(std::ofstream &file)
 {
+    FormatGuard formatGuard(file, std::ios_base::fixed);
     file << std::get<to_integral(Type::FLOAT)>(value);
 }
 
@@ -530,23 +561,20 @@ inline bool SJR::parseString(char*& file)
 
         type = Type::STRING;
 
+        value = "";
+
         std::string currentWord;
+
+        SJR::skipWhiteSpace(file);
 
         while (*file != '"')
         {
-            SJR::skipWhiteSpace(file);
-
-            if (*file == '"')
-            {
-                value = currentWord;
-                return true;
-            }
-
-
             currentWord += *file;
 
             ++file;
         }
+
+        currentWord.erase(remove_multi_whitespaces(currentWord.begin(), currentWord.end()), currentWord.end());
 
         ++file;
 
@@ -737,6 +765,22 @@ inline bool SJR::parse(char*& file)
 }
 
 
+//      ====================       ====================
+//      ====================STRUCTURE====================
+//      ====================       ====================
+
+
+SJR::FormatGuard::FormatGuard(std::ofstream& file, std::ios_base::fmtflags flag) :
+    file(file)
+{
+    file.setf(flag);
+}
+
+
+SJR::FormatGuard::~FormatGuard()
+{
+    file.unsetf(flag);
+}
+
+
 #endif // SJR_H
-
-
