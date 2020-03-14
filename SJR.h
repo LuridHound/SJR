@@ -771,7 +771,7 @@ inline bool SJR::parse(char*& file)
 
 
 SJR::FormatGuard::FormatGuard(std::ofstream& file, std::ios_base::fmtflags flag) :
-    file(file)
+    file(file), flag(flag)
 {
     file.setf(flag);
 }
