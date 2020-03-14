@@ -15,11 +15,11 @@
 class SJR
 {
     public :
-
+    
         SJR() = default;
-
+    
         // The same ordering, as in the std::variant<...> value.
-        enum class Type : int
+        enum class Type
         {
             BOOL = 0,
             INT = 1,
@@ -28,55 +28,70 @@ class SJR
             ARRAY = 4,
             OBJECT = 5,
         };
-
+    
         void load(std::string_view filename);
-
+    
         [[nodiscard]]
         bool save(std::string_view filename);
-
+    
         template<class T>
         void setValue(T&& newValue);
-
+    
         [[nodiscard]]
         Type getType() const;
         template<class T>
         [[nodiscard]]
         T getValue() const;
-
+    
         [[nodiscard]]
         size_t getChildCount() const;
         [[nodiscard]]
         size_t getArraySize() const;
-
+    
         SJR& operator[] (std::string_view nodeName);
         SJR& operator[] (size_t index);
-
+    
     private :
-
+    
         template<class T>
         static constexpr auto to_integral(T enumValue) -> std::underlying_type_t<T>
         {
             return static_cast<std::underlying_type_t<T>>(enumValue);
         }
-
-        std::map<std::string, SJR> mapJson;
-        std::vector<SJR> vectorJson;
-
-        std::variant<bool, int, float, std::string> value;
+    
+    
+        enum class Indexing
+        {
+            BOOL = 0,
+            INT = 1,
+            FLOAT = 2,
+            STRING = 3,
+    
+            MAP = 0,
+            VECTOR = 1
+        };
+    
+        using mapJson    = std::map<std::string, SJR>;
+        using vectorJson = std::vector<SJR>;
+    
+    
+        std::variant<mapJson, vectorJson> container = mapJson();
+        std::variant<bool, int, float, std::string> value = false;
+    
         Type type = Type::OBJECT;
-
+    
         static void writeTabs(std::ofstream& file, size_t count);
         static void skipWhiteSpace(char*&file);
-
+    
         void writeBool(std::ofstream& file);
         void writeInt(std::ofstream &file);
         void writeFloat(std::ofstream &file);
         void writeString(std::ofstream &file);
         void writeArray(std::ofstream &file);
         void writeObject(std::ofstream &file);
-
+    
         void write(std::ofstream& file);
-
+    
         [[nodiscard]]
         bool parseBool(char*& file);
         [[nodiscard]]
@@ -87,7 +102,7 @@ class SJR
         bool parseArray(char*& file);
         [[nodiscard]]
         bool parseObject(char*& file);
-
+    
         [[nodiscard]]
         bool parse(char*& file);
 };
@@ -114,6 +129,8 @@ inline void SJR::load(std::string_view filename)
 
     str.assign((std::istreambuf_iterator<char>(file)),{});
 
+    file.close();
+    
     char* fileData = str.data();
 
     if (!parse(fileData))
@@ -205,29 +222,29 @@ T SJR::getValue() const
 [[nodiscard]]
 inline size_t SJR::getChildCount() const
 {
-    return mapJson.size();
+    return std::get<static_cast<int>(Indexing::MAP)>(container).size();
 }
 
 
 [[nodiscard]]
 inline size_t SJR::getArraySize() const
 {
-    return vectorJson.size();
+    return std::get<static_cast<int>(Indexing::VECTOR)>(container).size();
 }
 
 
 [[nodiscard]]
 inline SJR& SJR::operator[] (std::string_view nodeName)
 {
-    auto it = mapJson.find(nodeName.data());
+    auto it = std::get<static_cast<int>(Indexing::MAP)>(container).find(nodeName.data());
 
-    if (it != mapJson.end())
+    if (it != std::get<static_cast<int>(Indexing::MAP)>(container).end())
     {
         return it->second;
     }
     else
     {
-        return mapJson[nodeName.data()];
+        return std::get<static_cast<int>(Indexing::MAP)>(container)[nodeName.data()];
     }
 }
 
@@ -239,16 +256,17 @@ inline SJR& SJR::operator[] (size_t index)
 {
     if (type != Type::ARRAY)
     {
-        vectorJson.resize(index);
+        container = vectorJson();
+        std::get<static_cast<int>(Indexing::VECTOR)>(container).resize(index);
         type = Type::ARRAY;
     }
 
-    if (index >= vectorJson.size())
+    if (index >= std::get<static_cast<int>(Indexing::VECTOR)>(container).size())
     {
-        vectorJson.resize(index + 1);
+        std::get<static_cast<int>(Indexing::VECTOR)>(container).resize(index + 1);
     }
 
-    return vectorJson.at(index);
+    return std::get<static_cast<int>(Indexing::VECTOR)>(container).at(index);
 }
 
 
@@ -305,13 +323,19 @@ inline void SJR::writeArray(std::ofstream &file)
 {
     file << '[';
 
-    for (auto it = vectorJson.begin(); it != vectorJson.end(); ++it)
+    if (container.index() == static_cast<int>(Indexing::VECTOR))
     {
-        it->write(file);
+        auto vectorBegin = std::get<static_cast<int>(Indexing::VECTOR)>(container).begin();
+        auto vectorEnd = std::get<static_cast<int>(Indexing::VECTOR)>(container).end();
 
-        if (it != (--vectorJson.end()))
+        for (auto it = vectorBegin; it != vectorEnd; ++it)
         {
-            file << ',' << ' ';
+            it->write(file);
+
+            if (it != std::prev(vectorEnd))
+            {
+                file << ',' << ' ';
+            }
         }
     }
 
@@ -336,18 +360,24 @@ inline void SJR::writeObject(std::ofstream &file)
     ++tabsCount;
     SJR::writeTabs(file, tabsCount);
 
-    for (auto it = mapJson.begin(); it != mapJson.end(); ++it)
+    if (container.index() == static_cast<int>(Indexing::MAP))
     {
-        file << "\"" << it->first << "\"";
-        file << ": ";
 
-        it->second.write(file);
-
-        if (it != (--mapJson.end()))
+        auto mapBegin = std::get<static_cast<int>(Indexing::MAP)>(container).begin();
+        auto mapEnd = std::get<static_cast<int>(Indexing::MAP)>(container).end();
+        for (auto it = mapBegin; it != mapEnd; ++it)
         {
-            file << ", ";
-            file << '\n';
-            SJR::writeTabs(file, tabsCount);
+            file << "\"" << it->first << "\"";
+            file << ": ";
+
+            it->second.write(file);
+
+            if (it != (std::prev(mapEnd)))
+            {
+                file << ", ";
+                file << '\n';
+                SJR::writeTabs(file, tabsCount);
+            }
         }
     }
 
@@ -537,6 +567,7 @@ inline bool SJR::parseArray(char*& file)
         ++file;
 
         type = Type::ARRAY;
+        container = vectorJson();
 
         while (*file != ']')
         {
@@ -556,7 +587,7 @@ inline bool SJR::parseArray(char*& file)
                 return false;
             }
 
-            vectorJson.push_back(newSJR);
+            std::get<to_integral(Indexing::VECTOR)>(container).push_back(newSJR);
 
             SJR::skipWhiteSpace(file);
 
@@ -643,7 +674,7 @@ inline bool SJR::parseObject(char*& file)
                     return true;
                 }
                 type = Type::OBJECT;
-                mapJson[nodeName] = newNode;
+                std::get<to_integral(Indexing::MAP)>(container)[nodeName] = newNode;
             }
 
             SJR::skipWhiteSpace(file);
@@ -707,4 +738,5 @@ inline bool SJR::parse(char*& file)
 
 
 #endif // SJR_H
+
 
