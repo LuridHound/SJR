@@ -30,6 +30,7 @@ class SJR
             OBJECT = 5,
         };
 
+        [[nodiscard]]
         bool load(std::string_view filename);
 
         [[nodiscard]]

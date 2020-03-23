@@ -12,12 +12,14 @@ Include it as usual file.
 
 ### Load
 ```cpp
-#define SJR_IMPLEMENTATION
 #include "SJR.h"
 
-
 SJR json;
-json.load("Filename.fileExtension");
+if (json.load("Filename.fileExtension"))
+{
+    // File was successfully loaded.    
+}
+
 
 ```
 ### Read
@@ -55,7 +57,29 @@ json["Ability"]["SpecialAttack"].getValue<int>();		// 40
 
 ### Save
 
-```cpp
-json.save("FilenameWhereYouWantToSave.fileExtension");
+To save json
 
+```cpp
+if (json.save("FilenameWhereYouWantToSave.fileExtension"))
+{
+   // File was successfully saved.     
+}
+```
+
+
+If you have written this information
+```cpp
+SJR file;
+file["Planet"].setValue<std::string>("Earth");
+file["Radius"].setValue<double>(6.371);
+
+```
+
+You will get the file 
+
+```cpp
+{
+    "Planet" : "Earth",
+    "Radius" : 6.371
+}
 ```
