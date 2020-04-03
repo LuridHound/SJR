@@ -69,10 +69,11 @@ if (json.save("FilenameWhereYouWantToSave.fileExtension"))
 
 If you have written this information
 ```cpp
-SJR file;
-file["Planet"].setValue<std::string>("Earth");
-file["Radius"].setValue<double>(6.371);
+SJR json;
+json["Planet"].setValue<std::string>("Earth");
+json["Radius"].setValue<double>(6.371);
 
+json.save("FilenameWhereYouWantToSave.fileExtension");
 ```
 
 You will get the file 
