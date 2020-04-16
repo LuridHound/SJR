@@ -244,29 +244,29 @@ T SJR::getValue() const
 [[nodiscard]]
 inline size_t SJR::getChildCount() const
 {
-    return std::get<static_cast<int>(Indexing::MAP)>(container).size();
+    return std::get<to_integral(Indexing::MAP)>(container).size();
 }
 
 
 [[nodiscard]]
 inline size_t SJR::getArraySize() const
 {
-    return std::get<static_cast<int>(Indexing::VECTOR)>(container).size();
+    return std::get<to_integral(Indexing::VECTOR)>(container).size();
 }
 
 
 [[nodiscard]]
 inline SJR& SJR::operator[] (std::string_view nodeName)
 {
-    auto it = std::get<static_cast<int>(Indexing::MAP)>(container).find(nodeName.data());
+    auto it = std::get<to_integral(Indexing::MAP)>(container).find(nodeName.data());
 
-    if (it != std::get<static_cast<int>(Indexing::MAP)>(container).end())
+    if (it != std::get<to_integral(Indexing::MAP)>(container).end())
     {
         return it->second;
     }
     else
     {
-        return std::get<static_cast<int>(Indexing::MAP)>(container)[nodeName.data()];
+        return std::get<to_integral(Indexing::MAP)>(container)[nodeName.data()];
     }
 }
 
@@ -279,16 +279,16 @@ inline SJR& SJR::operator[] (size_t index)
     if (type != Type::ARRAY)
     {
         container = vectorJson();
-        std::get<static_cast<int>(Indexing::VECTOR)>(container).resize(index);
+        std::get<to_integral(Indexing::VECTOR)>(container).resize(index);
         type = Type::ARRAY;
     }
 
-    if (index >= std::get<static_cast<int>(Indexing::VECTOR)>(container).size())
+    if (index >= std::get<to_integral(Indexing::VECTOR)>(container).size())
     {
-        std::get<static_cast<int>(Indexing::VECTOR)>(container).resize(index + 1);
+        std::get<to_integral(Indexing::VECTOR)>(container).resize(index + 1);
     }
 
-    return std::get<static_cast<int>(Indexing::VECTOR)>(container).at(index);
+    return std::get<to_integral(Indexing::VECTOR)>(container).at(index);
 }
 
 
@@ -355,10 +355,10 @@ inline void SJR::writeArray(std::ofstream &file)
 {
     file << '[';
 
-    if (container.index() == static_cast<int>(Indexing::VECTOR))
+    if (container.index() == to_integral(Indexing::VECTOR))
     {
-        auto vectorBegin = std::get<static_cast<int>(Indexing::VECTOR)>(container).begin();
-        auto vectorEnd = std::get<static_cast<int>(Indexing::VECTOR)>(container).end();
+        auto vectorBegin = std::get<to_integral(Indexing::VECTOR)>(container).begin();
+        auto vectorEnd = std::get<to_integral(Indexing::VECTOR)>(container).end();
 
         for (auto it = vectorBegin; it != vectorEnd; ++it)
         {
@@ -392,11 +392,11 @@ inline void SJR::writeObject(std::ofstream &file)
     ++tabsCount;
     SJR::writeTabs(file, tabsCount);
 
-    if (container.index() == static_cast<int>(Indexing::MAP))
+    if (container.index() == to_integral(Indexing::MAP))
     {
 
-        auto mapBegin = std::get<static_cast<int>(Indexing::MAP)>(container).begin();
-        auto mapEnd = std::get<static_cast<int>(Indexing::MAP)>(container).end();
+        auto mapBegin = std::get<to_integral(Indexing::MAP)>(container).begin();
+        auto mapEnd = std::get<to_integral(Indexing::MAP)>(container).end();
         for (auto it = mapBegin; it != mapEnd; ++it)
         {
             file << "\"" << it->first << "\"";
