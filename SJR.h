@@ -132,6 +132,7 @@ class SJR
 //      ====================      ====================
 
 
+[[nodiscard]]
 inline bool SJR::load(std::string_view filename)
 {
     std::ifstream file(filename.data());
@@ -160,6 +161,8 @@ inline bool SJR::load(std::string_view filename)
     {
         return false;
     }
+    
+    return true;
 }
 
 
