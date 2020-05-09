@@ -39,6 +39,9 @@ class SJR
         template<class T>
         void setValue(T&& newValue);
 
+        template <class ...Args>
+        void setArray(Args&&... args);
+
         [[nodiscard]]
         Type getType() const;
 
@@ -183,6 +186,14 @@ inline bool SJR::save(std::string_view filename)
     return true;
 }
 
+template <class ...Args>
+void SJR::setArray(Args&&... args)
+{
+    type = Type::ARRAY;
+    vectorJson = std::vector<SJR>{
+        std::forward<Args>(args)...
+    };
+}
 
 template<class T>
 void SJR::setValue(T&& newValue)
